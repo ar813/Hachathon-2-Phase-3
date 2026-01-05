@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import TodoList from '@/app/(components)/TodoList';
-import { Todo } from '@/types/todo';
 import { useToast } from '@/app/(components)/ToastProvider';
 import { Trash2, AlertTriangle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';

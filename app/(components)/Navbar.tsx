@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
 
 export default function Navbar() {
@@ -11,7 +10,6 @@ export default function Navbar() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
-    const pathname = usePathname();
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Use better-auth session hook

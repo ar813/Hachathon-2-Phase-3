@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import {
-    MessageCircle, X, Send, Loader2, Sparkles, RefreshCcw, Command,
+    X, Send, RefreshCcw, Command,
     Plus, Trash2, CheckCircle2, List, Trash, Edit3, Terminal,
     Monitor, Activity, Cpu, ChevronRight, Layout
 } from 'lucide-react';
@@ -133,7 +133,7 @@ export default function Chatbot({ onActionSuccess }: ChatbotProps) {
         }
 
         try {
-            const response = await fetch('http://localhost:8000/ask', {
+            const response = await fetch('https://backend-phase-3.onrender.com/ask', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -148,7 +148,7 @@ export default function Chatbot({ onActionSuccess }: ChatbotProps) {
             setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
             recordAction(data.reply);
             if (onActionSuccess) onActionSuccess();
-        } catch (error) {
+        } catch {
             setMessages(prev => [...prev, { role: 'bot', text: 'SYSTEM_ERROR: Connection lost. Re-attempting...' }]);
         } finally {
             setIsLoading(false);

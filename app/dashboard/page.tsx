@@ -4,12 +4,11 @@ import { useState } from 'react';
 import AddTodoForm from '@/app/(components)/AddTodoForm';
 import TodoDashboard from '@/app/(components)/TodoDashboard';
 import Chatbot from '@/app/(components)/Chatbot';
-import { Todo } from '@/types/todo';
 
 export default function Dashboard() {
     const [refreshKey, setRefreshKey] = useState(0);
 
-    const handleTodoAdded = (newTodo: Todo) => {
+    const handleTodoAdded = () => {
         setRefreshKey(prevKey => prevKey + 1);
     };
 

@@ -125,13 +125,12 @@ export default function TodoList({
 
   return (
     <ul className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4 w-full'}>
-      {processedTodos.map((todo, index) => (
+      {processedTodos.map((todo) => (
         <TodoItem
           key={todo.id}
           todo={todo}
           onUpdate={handleUpdateTodo}
           onDelete={handleDeleteTodo}
-          index={index}
         />
       ))}
     </ul>

@@ -10,10 +10,9 @@ interface TodoItemProps {
     todo: Todo;
     onUpdate: (updatedTodo: Todo) => void;
     onDelete: (id: string) => void;
-    index: number;
 }
 
-export default function TodoItem({ todo, onUpdate, onDelete, index }: TodoItemProps) {
+export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedTitle, setEditedTitle] = useState(todo.title);
     const [editedDescription, setEditedDescription] = useState(todo.description || '');
@@ -128,8 +127,8 @@ export default function TodoItem({ todo, onUpdate, onDelete, index }: TodoItemPr
                             onClick={handleToggleCompletion}
                             disabled={loading}
                             className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${todo.completed
-                                    ? 'bg-green-500 border-green-500 text-white scale-110'
-                                    : 'border-slate-300 dark:border-slate-500 hover:border-blue-500 dark:hover:border-blue-400'
+                                ? 'bg-green-500 border-green-500 text-white scale-110'
+                                : 'border-slate-300 dark:border-slate-500 hover:border-blue-500 dark:hover:border-blue-400'
                                 }`}
                         >
                             {todo.completed && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
@@ -215,7 +214,7 @@ export default function TodoItem({ todo, onUpdate, onDelete, index }: TodoItemPr
             >
                 <div className="space-y-4">
                     <p className="text-slate-600 dark:text-slate-300">
-                        Are you sure you want to delete <span className="font-bold text-slate-900 dark:text-white">"{todo.title}"</span>? This action cannot be undone.
+                        Are you sure you want to delete <span className="font-bold text-slate-900 dark:text-white">&quot;{todo.title}&quot;</span>? This action cannot be undone.
                     </p>
                     <div className="flex justify-end gap-3 pt-2">
                         <button
