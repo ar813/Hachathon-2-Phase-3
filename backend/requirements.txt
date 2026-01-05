@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+openai-agents
+mcp
+psycopg2-binary
+asyncpg
+openai-agents-mcp
