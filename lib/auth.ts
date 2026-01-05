@@ -3,6 +3,7 @@ import { pool } from "./db";
 
 export const auth = betterAuth({
     database: pool,
+    baseURL: process.env.BETTER_AUTH_URL,
 
     emailAndPassword: {
         enabled: true,

@@ -15,8 +15,9 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    // Check for better-auth session cookie
-    const sessionToken = req.cookies.get('better-auth.session_token')?.value;
+    // Check for better-auth session cookie (handles both HTTP and HTTPS/Vercel)
+    const sessionToken = req.cookies.get('better-auth.session_token')?.value ||
+        req.cookies.get('__Secure-better-auth.session_token')?.value;
 
     if (!sessionToken) {
         // If it's an API route, return 401 JSON
