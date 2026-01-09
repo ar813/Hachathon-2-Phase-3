@@ -7,3 +7,4 @@ mcp
 psycopg2-binary
 asyncpg
 openai-agents-mcp
+agent

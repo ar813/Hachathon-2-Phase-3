@@ -19,6 +19,53 @@ class DatabaseManager:
         if self.pool:
             await self.pool.close()
 
+    async def ensure_user_exists(self, user_id: str):
+        """
+        Ensures a user record exists to satisfy foreign key constraints.
+        Attempts multiple common schemas since we can't inspect the DB directly.
+        """
+        async with self.pool.acquire() as conn:
+            # Check existence first
+            exists = await conn.fetchval('SELECT 1 FROM "user" WHERE id = $1', user_id)
+            if exists:
+                return
+
+            print(f"DEBUG: User {user_id} not found. Attempting auto-creation...")
+            try:
+                # Try Strategy 1: Standard snake_case with timestamps
+                await conn.execute('''
+                    INSERT INTO "user" (id, name, email, created_at, updated_at)
+                    VALUES ($1, $2, $3, NOW(), NOW())
+                ''', user_id, f"User_{user_id[:5]}", f"{user_id}@placeholder.com")
+                print(f"DEBUG: Auto-created user {user_id} (Format: snake_case timestamps)")
+                return
+            except Exception as e1:
+                print(f"WARNING: Strategy 1 failed: {e1}")
+
+            try:
+                # Try Strategy 2: standard minimal (id, email, name)
+                # Some schemas have default timestamps
+                await conn.execute('''
+                    INSERT INTO "user" (id, name, email)
+                    VALUES ($1, $2, $3)
+                ''', user_id, f"User_{user_id[:5]}", f"{user_id}@placeholder.com")
+                print(f"DEBUG: Auto-created user {user_id} (Format: minimal)")
+                return
+            except Exception as e2:
+                print(f"WARNING: Strategy 2 failed: {e2}")
+
+            try:
+                # Try Strategy 3: camelCase timestamps (common in prisma/nextauth)
+                await conn.execute('''
+                    INSERT INTO "user" (id, name, email, "createdAt", "updatedAt")
+                    VALUES ($1, $2, $3, NOW(), NOW())
+                ''', user_id, f"User_{user_id[:5]}", f"{user_id}@placeholder.com")
+                print(f"DEBUG: Auto-created user {user_id} (Format: camelCase timestamps)")
+                return
+            except Exception as e3:
+                print(f"ERROR: All user creation strategies failed. Error: {e3}")
+                # We do not raise here, we let the FK error happen in the caller so it bubbles up normally if we couldn't fix it.
+
     async def get_todos(self, user_id: str) -> List[Dict]:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
@@ -28,6 +75,9 @@ class DatabaseManager:
             return [dict(row) for row in rows]
 
     async def add_todo(self, user_id: str, title: str, description: Optional[str] = None, completed: bool = False) -> Dict:
+        # Ensure user exists before adding todo
+        await self.ensure_user_exists(user_id)
+        
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
                 "INSERT INTO todos (user_id, title, description, completed) VALUES ($1, $2, $3, $4) RETURNING id, title, description, completed",

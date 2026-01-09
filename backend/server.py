@@ -53,24 +53,24 @@ async def ask(req: AskRequest):
     history = req.history
     action_history = req.actionHistory
     
-    # Store action history in asyncio loop for agent_service to pick up (simplest way without refactoring run_agent_with_user signature)
-    import asyncio
-    asyncio.recent_actions_list = [f"- {a['type']}: {a['details']} ({a['timestamp']})" for a in action_history]
-
-    print(f"DEBUG: user_id={user_id}, prompt={prompt}")
-    logging.info(f"Incoming request: user_id={user_id}, prompt='{prompt[:50]}...', history_len={len(history)}")
+    print(f"DEBUG: user_id='{user_id}', prompt='{prompt}', action_history_len={len(action_history)}")
+    logging.info(f"Incoming request: user_id='{user_id}', prompt='{prompt[:50]}...', history_len={len(history)}")
     
     if not prompt:
         raise HTTPException(status_code=400, detail="Empty prompt")
     if not user_id:
+        print("ERROR: User ID is empty!")
         raise HTTPException(status_code=400, detail="User ID is required for security isolation")
 
     try:
         logging.info("Calling agent service...")
-        reply = await run_agent_with_user(prompt, user_id, history)
+        # Start the agent with explicit context
+        reply = await run_agent_with_user(prompt, user_id, history, action_history)
         logging.info("Agent responded successfully")
+        print(f"DEBUG: Agent Reply: {reply[:100]}...")
     except Exception as e:
         logging.exception(f"Agent service failed for user {user_id}")
+        print(f"ERROR: {e}")
         raise HTTPException(status_code=500, detail=f"Agent error: {e}")
 
     return {"reply": reply or "I'm sorry, I couldn't generate a response."}

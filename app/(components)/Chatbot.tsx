@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, MessageCircle, Trash2, Bot, User, Sparkles } from 'lucide-react';
+import { X, Send, MessageCircle, Trash2, Bot, User, Sparkles, Mic, MicOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from '@/lib/auth-client';
 
@@ -22,6 +22,10 @@ export default function Chatbot({ onActionSuccess }: ChatbotProps) {
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef<any>(null); // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const textBeforeListeningRef = useRef('');
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -50,6 +54,69 @@ export default function Chatbot({ onActionSuccess }: ChatbotProps) {
     useEffect(() => {
         adjustTextareaHeight();
     }, [input]);
+
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = true; // Use continuous to capture full sentences/pauses
+            recognitionRef.current.interimResults = true; // Show real-time feedback
+
+            recognitionRef.current.onstart = () => {
+                setIsListening(true);
+                textBeforeListeningRef.current = input; // Capture existing text
+            };
+
+            recognitionRef.current.onend = () => {
+                setIsListening(false);
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+            };
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            recognitionRef.current.onresult = (event: any) => {
+                // Clear existing silence timer on every new result
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
+                // Set new silence timer (2 seconds)
+                silenceTimerRef.current = setTimeout(() => {
+                    recognitionRef.current?.stop();
+                }, 2000);
+
+                let currentSessionTranscript = '';
+                for (let i = 0; i < event.results.length; ++i) {
+                    currentSessionTranscript += event.results[i][0].transcript;
+                }
+
+                // Combine previous text with new transcript
+                // Ensure we don't double spacing if previous text was empty
+                const previous = textBeforeListeningRef.current;
+                const separator = previous && currentSessionTranscript ? ' ' : '';
+                setInput(previous + separator + currentSessionTranscript);
+            };
+        }
+
+        return () => {
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+            recognitionRef.current?.abort();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Removed `input` dependency to avoid re-binding listener which breaks continuous flow
+
+    const toggleListening = () => {
+        if (!recognitionRef.current) {
+            alert("Your browser does not support voice input.");
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            // Update the ref before starting in case user typed something manually while stopped
+            textBeforeListeningRef.current = input;
+            recognitionRef.current.start();
+        }
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -81,7 +148,7 @@ export default function Chatbot({ onActionSuccess }: ChatbotProps) {
         setIsLoading(true);
 
         try {
-            const response = await fetch('https://backend-phase-3.onrender.com/ask', {
+            const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + '/ask', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -206,45 +273,73 @@ export default function Chatbot({ onActionSuccess }: ChatbotProps) {
 
                             {/* Input Area */}
                             <div className="p-4 md:p-5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                                <form onSubmit={handleSubmit} className="flex gap-3 items-end">
-                                    <div className="flex-1 relative">
+                                <form onSubmit={handleSubmit} className="relative flex items-end gap-2 bg-slate-100 dark:bg-slate-800/50 p-1.5 md:p-2 rounded-[26px] md:rounded-[28px] border border-slate-200 dark:border-slate-700 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500/30 transition-all">
+                                    <div className="flex-1 relative flex items-center min-w-0">
                                         <textarea
                                             ref={textareaRef}
                                             value={input}
                                             onChange={(e) => setInput(e.target.value)}
                                             onKeyDown={handleKeyDown}
-                                            placeholder="Ask something..."
+                                            placeholder={isListening ? "Listening..." : "Ask me anything..."}
                                             rows={1}
                                             className="
-                                                w-full pl-5 pr-12 py-3.5 
-                                                bg-slate-100 dark:bg-slate-800 
-                                                text-slate-900 dark:text-slate-100 placeholder:text-slate-400
-                                                rounded-2xl border-2 border-transparent focus:border-indigo-500/20 focus:bg-white dark:focus:bg-slate-950
-                                                focus:outline-none focus:ring-0 transition-all font-medium
-                                                resize-none overflow-y-auto min-h-[50px]
+                                                w-full pl-3 md:pl-4 pr-10 py-2.5 md:py-3 
+                                                bg-transparent
+                                                text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400
+                                                border-none outline-none focus:outline-none focus:ring-0 focus:border-none ring-0 shadow-none appearance-none
+                                                resize-none overflow-y-auto min-h-[40px] md:min-h-[44px]
+                                                text-base md:text-[15px] leading-relaxed
                                                 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full
                                             "
                                             disabled={isLoading}
                                             style={{ maxHeight: '120px' }}
                                         />
-                                        <div className="absolute right-3 top-4 text-slate-400">
-                                            <Sparkles size={18} />
+
+                                        {/* Sparkle Icon within input area */}
+                                        <div className="absolute right-2 top-2.5 md:top-3 text-slate-400 pointer-events-none">
+                                            <Sparkles size={16} className={`transition-opacity duration-200 ${input.trim() ? "opacity-0" : "opacity-70"}`} />
                                         </div>
                                     </div>
-                                    <button
-                                        type="submit"
-                                        disabled={isLoading || !input.trim()}
-                                        className="
-                                            p-3.5 bg-gradient-to-br from-indigo-600 to-blue-600 
-                                            hover:from-indigo-500 hover:to-blue-500 
-                                            text-white rounded-2xl shadow-lg shadow-indigo-500/20
-                                            disabled:opacity-50 disabled:cursor-not-allowed 
-                                            transition-all hover:scale-105 active:scale-95
-                                            h-[50px] w-[50px] flex items-center justify-center
-                                        "
-                                    >
-                                        <Send size={22} />
-                                    </button>
+
+                                    {/* Action Buttons Group */}
+                                    <div className="flex items-center gap-1 pr-1 pb-1 shrink-0">
+                                        {/* Mic Button */}
+                                        <button
+                                            type="button"
+                                            onClick={toggleListening}
+                                            disabled={isLoading}
+                                            className={`
+                                                relative flex items-center justify-center
+                                                w-9 h-9 md:w-10 md:h-10 rounded-full transition-all duration-200
+                                                ${isListening
+                                                    ? 'bg-red-50 text-red-500 hover:bg-red-100 dark:bg-red-500/20 dark:text-red-400'
+                                                    : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                                                }
+                                            `}
+                                            title={isListening ? "Stop Listening" : "Start Voice Input"}
+                                        >
+                                            {isListening && (
+                                                <span className="absolute inset-0 rounded-full border border-red-500/30 animate-ping"></span>
+                                            )}
+                                            {isListening ? <MicOff size={18} className="md:w-5 md:h-5" /> : <Mic size={18} className="md:w-5 md:h-5" />}
+                                        </button>
+
+                                        {/* Send Button */}
+                                        <button
+                                            type="submit"
+                                            disabled={isLoading || !input.trim()}
+                                            className={`
+                                                flex items-center justify-center
+                                                w-9 h-9 md:w-10 md:h-10 rounded-full transition-all duration-200
+                                                ${input.trim()
+                                                    ? 'bg-indigo-600 text-white shadow-md hover:bg-indigo-700 hover:scale-105 active:scale-95'
+                                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                                                }
+                                            `}
+                                        >
+                                            <Send size={16} className={`md:w-[18px] md:h-[18px] ${input.trim() ? "ml-0.5" : ""}`} />
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </motion.div>
