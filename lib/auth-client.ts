@@ -1,7 +1,7 @@
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({ 
-    baseURL: "https://hachathon-2-phase-3.vercel.app",
+    baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
 });
 
 export const {
@@ -10,3 +10,5 @@ export const {
     signOut,
     useSession
 } = authClient;
+
+// "https://hachathon-2-phase-3.vercel.app"

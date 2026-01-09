@@ -190,6 +190,65 @@ export default function Navbar() {
                 </div>
             </div>
 
+            {/* Mobile Menu Drawer */}
+            <div className={`fixed inset-0 z-[60] transform ${isOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 md:hidden`}>
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+                <div className="absolute right-0 top-0 h-full w-[280px] bg-white dark:bg-slate-950 shadow-2xl p-6 flex flex-col gap-6 border-l border-slate-100 dark:border-slate-800">
+                    <div className="flex justify-end">
+                        <button onClick={() => setIsOpen(false)} className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-full transition-colors">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Dark Mode</span>
+                            <button
+                                onClick={toggleDarkMode}
+                                className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm text-slate-500 hover:text-yellow-500 dark:hover:text-yellow-400 transition-colors"
+                            >
+                                {darkMode ? (
+                                    <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                ) : (
+                                    <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                                )}
+                            </button>
+                        </div>
+
+                        {!isLoggedIn ? (
+                            <div className="flex flex-col gap-3">
+                                <Link href="/login" onClick={() => setIsOpen(false)} className="w-full py-3 text-center text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                                    Login
+                                </Link>
+                                <Link href="/signup" onClick={() => setIsOpen(false)} className="w-full py-3 text-center text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all">
+                                    Sign Up
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl mb-2">
+                                    <div className="h-10 w-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-sm font-bold text-blue-600 shadow-sm">
+                                        {getInitials(userName)}
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden">
+                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{userName}</span>
+                                        <span className="text-xs text-slate-500 truncate">{userEmail}</span>
+                                    </div>
+                                </div>
+                                <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                                    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                    Dashboard
+                                </Link>
+                                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl w-full text-left transition-colors">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                    Sign out
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
         </nav>
     );
 }
