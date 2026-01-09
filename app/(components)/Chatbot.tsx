@@ -23,7 +23,8 @@ export default function Chatbot({ onActionSuccess }: ChatbotProps) {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isListening, setIsListening] = useState(false);
-    const recognitionRef = useRef<any>(null); // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognitionRef = useRef<any>(null);
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const textBeforeListeningRef = useRef('');
 
